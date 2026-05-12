@@ -1,0 +1,25 @@
+# === .NET / C# 編譯產物 ===
+[Bb]in/
+[Oo]bj/
+[Rr]elease/
+[Dd]ebug/
+
+# === Visual Studio 暫存與個人設定 ===
+.vs/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# === NuGet 套件 ===
+# 只要有專案檔，隊友下載後執行「還原 (Restore)」即可，不需要推上雲端
+packages/
+*.nuget.props
+*.nuget.targets
+
+# === VS Code 設定 ===
+.vscode/
+
+# === 作業系統垃圾 ===
+.DS_Store
+Thumbs.db
