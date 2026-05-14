@@ -85,19 +85,19 @@ namespace MyProject.Utilities
                     foreach (var player in match.HomeTeam.Players)
                     {
                         writer.WriteLine($"{match.HomeTeam.TeamName},{player.JerseyNumber},{EscapeCSV(player.Name)}," +
-                                       $"{statistics.GetPlayerAttackSuccessRate(player.JerseyNumber):F2}," +
-                                       $"{statistics.GetPlayerServeSuccessRate(player.JerseyNumber):F2}," +
+                                       $"{statistics.GetPlayerAttackSuccessRate(player.JerseyNumber, TeamSide.Home):F2}," +
+                                       $"{statistics.GetPlayerServeSuccessRate(player.JerseyNumber, TeamSide.Home):F2}," +
                                        $"{statistics.GetPlayerScoresTotals(player.JerseyNumber, TeamSide.Home)}," +
-                                       $"{statistics.GetPlayerErrorCount(player.JerseyNumber)}");
+                                       $"{statistics.GetPlayerErrorCount(player.JerseyNumber, TeamSide.Home)}");
                     }
 
                     foreach (var player in match.AwayTeam.Players)
                     {
                         writer.WriteLine($"{match.AwayTeam.TeamName},{player.JerseyNumber},{EscapeCSV(player.Name)}," +
-                                       $"{statistics.GetPlayerAttackSuccessRate(player.JerseyNumber):F2}," +
-                                       $"{statistics.GetPlayerServeSuccessRate(player.JerseyNumber):F2}," +
+                                       $"{statistics.GetPlayerAttackSuccessRate(player.JerseyNumber, TeamSide.Away):F2}," +
+                                       $"{statistics.GetPlayerServeSuccessRate(player.JerseyNumber, TeamSide.Away):F2}," +
                                        $"{statistics.GetPlayerScoresTotals(player.JerseyNumber, TeamSide.Away)}," +
-                                       $"{statistics.GetPlayerErrorCount(player.JerseyNumber)}");
+                                       $"{statistics.GetPlayerErrorCount(player.JerseyNumber, TeamSide.Away)}");
                     }
                 }
                 return true;

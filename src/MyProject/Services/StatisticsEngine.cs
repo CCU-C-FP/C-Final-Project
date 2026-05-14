@@ -17,12 +17,13 @@ namespace MyProject.Services
         }
 
         /// 計算球員的攻擊成功率
-        public double GetPlayerAttackSuccessRate(int playerId)
+        public double GetPlayerAttackSuccessRate(int playerId, TeamSide team)
         {
             var attacks = _eventManager.GetEventsByPlayer(playerId)
-                .Where(e => e.Action == ActionType.AttackSuccess || 
-                           e.Action == ActionType.AttackFault ||
-                           e.Action == ActionType.AttackBlocked)
+                .Where(e => e.Team == team &&
+                           (e.Action == ActionType.AttackSuccess || 
+                            e.Action == ActionType.AttackFault ||
+                            e.Action == ActionType.AttackBlocked))
                 .ToList();
 
             if (attacks.Count == 0)
@@ -33,10 +34,11 @@ namespace MyProject.Services
         }
 
         /// 計算球員的發球成功率
-        public double GetPlayerServeSuccessRate(int playerId)
+        public double GetPlayerServeSuccessRate(int playerId, TeamSide team)
         {
             var serves = _eventManager.GetEventsByPlayer(playerId)
-                .Where(e => e.Action == ActionType.ServeSuccess || e.Action == ActionType.ServeFault)
+                .Where(e => e.Team == team &&
+                           (e.Action == ActionType.ServeSuccess || e.Action == ActionType.ServeFault))
                 .ToList();
 
             if (serves.Count == 0)
@@ -134,7 +136,7 @@ namespace MyProject.Services
         }
 
         /// 計算球員的失誤次數
-        public int GetPlayerErrorCount(int playerId)
+        public int GetPlayerErrorCount(int playerId, TeamSide team)
         {
             var errorActions = new[]
             {
@@ -146,7 +148,7 @@ namespace MyProject.Services
             };
 
             return _eventManager.GetEventsByPlayer(playerId)
-                .Count(e => errorActions.Contains(e.Action));
+                .Count(e => e.Team == team && errorActions.Contains(e.Action));
         }
 
         /// 取得各局的得分進度曲線（用於趨勢分析）

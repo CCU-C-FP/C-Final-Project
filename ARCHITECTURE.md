@@ -192,10 +192,10 @@ scoring.ProcessGameEvent(evt);
 **主要方法：**
 ```csharp
 // 個人統計
-public double GetPlayerAttackSuccessRate(int playerId)
-public double GetPlayerServeSuccessRate(int playerId)
+public double GetPlayerAttackSuccessRate(int playerId, TeamSide team)
+public double GetPlayerServeSuccessRate(int playerId, TeamSide team)
 public int GetPlayerScoresTotals(int playerId, TeamSide team)
-public int GetPlayerErrorCount(int playerId)
+public int GetPlayerErrorCount(int playerId, TeamSide team)
 
 // 隊伍統計
 public double GetTeamAttackSuccessRate(TeamSide team)
