@@ -13,8 +13,10 @@ namespace MyProject.Services
         /// 當前比賽
         private Match _match;
 
-        /// 事件管理器
-        private EventManager _eventManager;
+    /// <summary>
+        /// 事件管理器（可能為 null，用於舊系統相容性）
+        /// </summary>
+        private EventManager? _eventManager;
 
         
         /// 局數結束時的通知
@@ -30,6 +32,13 @@ namespace MyProject.Services
         {
             _match = match;
             _eventManager = eventManager;
+
+            // 訂閱事件管理器的 Undo/Redo 事件，確保比分與事件清單同步
+            if (_eventManager != null)
+            {
+                _eventManager.EventUndone += (sender, evt) => RecalculateScores();
+                _eventManager.EventRedone += (sender, evt) => RecalculateScores();
+            }
         }
 
         /// 根據比賽事件更新比分
@@ -203,6 +212,46 @@ namespace MyProject.Services
             string homeSetScores = string.Join("-", _match.HomeTeam.SetScores.Values);
             string awaySetScores = string.Join("-", _match.AwayTeam.SetScores.Values);
             return $"主隊: {homeSetScores} | 客隊: {awaySetScores}";
+        }
+
+        /// <summary>
+        /// 根據 EventManager 中的所有事件重新計算比分
+        /// 用於 Undo/Redo 操作後同步比分狀態
+        /// </summary>
+        private void RecalculateScores()
+        {
+            // 1. 重置比分和狀態
+            ResetScores();
+
+            // 2. 重新遍歷所有事件，逐一應用計分邏輯
+            if (_eventManager != null)
+            {
+                var allEvents = _eventManager.GetAllEvents();
+                foreach (var evt in allEvents)
+                {
+                    ProcessGameEvent(evt);
+                }
+            }
+
+            // 3. 觸發比分更新通知
+            ScoreUpdated?.Invoke(this, _match.GetCurrentScore());
+        }
+
+        /// <summary>
+        /// 重置所有比分和局數信息
+        /// </summary>
+        private void ResetScores()
+        {
+            // 重置隊伍比分和局數
+            _match.HomeTeam.SetScores.Clear();
+            _match.AwayTeam.SetScores.Clear();
+            _match.HomeTeam.SetsWon = 0;
+            _match.AwayTeam.SetsWon = 0;
+            _match.CurrentSetNumber = 1;
+
+            // 初始化第一局的比分
+            _match.HomeTeam.StartNewSet(1);
+            _match.AwayTeam.StartNewSet(1);
         }
     }
 }

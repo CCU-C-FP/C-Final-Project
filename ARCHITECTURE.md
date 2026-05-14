@@ -191,7 +191,7 @@ scoring.ProcessGameEvent(evt);
 
 **主要方法：**
 ```csharp
-// 個人統計
+// 個人統計（現已包含 TeamSide 參數以避免球員背號重複時的混淆）
 public double GetPlayerAttackSuccessRate(int playerId, TeamSide team)
 public double GetPlayerServeSuccessRate(int playerId, TeamSide team)
 public int GetPlayerScoresTotals(int playerId, TeamSide team)
@@ -205,7 +205,7 @@ public Dictionary<ActionType, int> GetTeamErrorBreakdown(TeamSide team)
 
 // 趨勢分析
 public List<(int Time, int HomeScore, int AwayScore)> GetScoreTrendData()
-public List<int> GetErrorClusterPoints(TeamSide team, int windowSize = 5)
+public List<ErrorClusterInfo> GetErrorClusterPoints(TeamSide team, int windowSize = 5)
 
 // 報告
 public string GenerateStatisticsReport()
@@ -215,8 +215,11 @@ public string GenerateStatisticsReport()
 ```csharp
 var stats = new StatisticsEngine(eventManager, match);
 
-// 取得攻擊成功率
-double rate = stats.GetTeamAttackSuccessRate(TeamSide.Home);
+// 取得攻擊成功率（指定隊伍，避免背號重複混淆）
+double rate = stats.GetPlayerAttackSuccessRate(1, TeamSide.Home);
+
+// 取得隊伍統計
+double homeRate = stats.GetTeamAttackSuccessRate(TeamSide.Home);
 
 // 取得得分來源
 var breakdown = stats.GetTeamScoringBreakdown(TeamSide.Home);

@@ -17,6 +17,7 @@ namespace MyProject.Services
         }
 
         /// 計算球員的攻擊成功率
+        /// 同時指定隊伍，避免同背號球員混淆
         public double GetPlayerAttackSuccessRate(int playerId, TeamSide team)
         {
             var attacks = _eventManager.GetEventsByPlayer(playerId)
@@ -34,6 +35,7 @@ namespace MyProject.Services
         }
 
         /// 計算球員的發球成功率
+        /// 同時指定隊伍，避免同背號球員混淆
         public double GetPlayerServeSuccessRate(int playerId, TeamSide team)
         {
             var serves = _eventManager.GetEventsByPlayer(playerId)
@@ -92,10 +94,11 @@ namespace MyProject.Services
                 ActionType.TeamScore
             };
 
+            var allEvents = _eventManager.GetAllEvents();
             var breakdown = new Dictionary<ActionType, int>();
             foreach (var action in scoringActions)
             {
-                breakdown[action] = _eventManager.GetAllEvents()
+                breakdown[action] = allEvents
                     .Count(e => e.Team == team && e.Action == action);
             }
             return breakdown;
@@ -113,10 +116,11 @@ namespace MyProject.Services
                 ActionType.TossFault
             };
 
+            var allEvents = _eventManager.GetAllEvents();
             var breakdown = new Dictionary<ActionType, int>();
             foreach (var action in errorActions)
             {
-                breakdown[action] = _eventManager.GetAllEvents()
+                breakdown[action] = allEvents
                     .Count(e => e.Team == team && e.Action == action);
             }
             return breakdown;
@@ -135,7 +139,10 @@ namespace MyProject.Services
                 .Count(e => e.Team == team && scoringActions.Contains(e.Action));
         }
 
+        /// <summary>
         /// 計算球員的失誤次數
+        /// 同時指定隊伍，避免同背號球員混淆
+        /// </summary>
         public int GetPlayerErrorCount(int playerId, TeamSide team)
         {
             var errorActions = new[]
@@ -194,14 +201,24 @@ namespace MyProject.Services
             return trendData;
         }
 
-        /// 取得失誤密集點（連續失誤的時間點）
-        public List<int> GetErrorClusterPoints(TeamSide team, int windowSize = 5)
+        /// <summary>
+        /// 取得失誤密集點（連續失誤集群）
+        /// 分析隊伍事件中是否存在集中的失誤時期
+        /// </summary>
+        /// <param name="team">分析的隊伍</param>
+        /// <param name="windowSize">滑動視窗大小（預設 5 個事件）</param>
+        /// <returns>包含時間戳和全域索引的失誤集群清單</returns>
+        public List<ErrorClusterInfo> GetErrorClusterPoints(TeamSide team, int windowSize = 5)
         {
-            var teamEvents = _eventManager.GetAllEvents()
+            if (windowSize <= 0)
+                throw new ArgumentOutOfRangeException(nameof(windowSize), "視窗大小必須大於 0");
+
+            var allEvents = _eventManager.GetAllEvents();
+            var teamEvents = allEvents
                 .Where(e => e.Team == team)
                 .ToList();
 
-            var clusters = new List<int>();
+            var clusters = new List<ErrorClusterInfo>();
             var errorActions = new[]
             {
                 ActionType.AttackFault,
@@ -211,17 +228,34 @@ namespace MyProject.Services
                 ActionType.TossFault
             };
 
-            for (int i = 0; i < teamEvents.Count - windowSize; i++)
+            for (int i = 0; i <= teamEvents.Count - windowSize; i++)
             {
-                int errorCount = teamEvents
+                var windowEvents = teamEvents
                     .Skip(i)
                     .Take(windowSize)
+                    .ToList();
+
+                int errorCount = windowEvents
                     .Count(e => errorActions.Contains(e.Action));
 
                 // 如果在窗口內有 3 個或以上的失誤，標記為密集點
                 if (errorCount >= 3)
                 {
-                    clusters.Add(i);
+                    // 取得此窗口中第一個和最後一個事件的時間戳
+                    var startEvent = windowEvents.First();
+                    var endEvent = windowEvents.Last();
+
+                    // 計算全域事件索引（在完整事件清單中的位置）
+                    int globalEventStartIndex = allEvents.IndexOf(startEvent);
+
+                    var clusterInfo = new ErrorClusterInfo(
+                        startEvent.Timestamp,
+                        endEvent.Timestamp,
+                        globalEventStartIndex,
+                        errorCount,
+                        windowSize);
+
+                    clusters.Add(clusterInfo);
                 }
             }
 

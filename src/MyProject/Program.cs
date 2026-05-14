@@ -136,6 +136,25 @@ namespace MyProject
             Console.WriteLine($"  攻擊成功率: {statsEngine.GetTeamAttackSuccessRate(TeamSide.Away):F2}%");
             Console.WriteLine($"  發球成功率: {statsEngine.GetTeamServeSuccessRate(TeamSide.Away):F2}%");
 
+            Console.WriteLine("\n── 球員個人統計（前 3 名主要球員）──");
+            if (match.HomeTeam.Players.Count > 0)
+            {
+                var player1 = match.HomeTeam.Players[0];
+                Console.WriteLine($"主隊 - {player1.Name} (#{player1.JerseyNumber}):");
+                Console.WriteLine($"  攻擊成功率: {statsEngine.GetPlayerAttackSuccessRate(player1.JerseyNumber, TeamSide.Home):F2}%");
+                Console.WriteLine($"  發球成功率: {statsEngine.GetPlayerServeSuccessRate(player1.JerseyNumber, TeamSide.Home):F2}%");
+                Console.WriteLine($"  失誤次數: {statsEngine.GetPlayerErrorCount(player1.JerseyNumber, TeamSide.Home)}");
+            }
+
+            if (match.AwayTeam.Players.Count > 0)
+            {
+                var player2 = match.AwayTeam.Players[1];
+                Console.WriteLine($"\n客隊 - {player2.Name} (#{player2.JerseyNumber}):");
+                Console.WriteLine($"  攻擊成功率: {statsEngine.GetPlayerAttackSuccessRate(player2.JerseyNumber, TeamSide.Away):F2}%");
+                Console.WriteLine($"  發球成功率: {statsEngine.GetPlayerServeSuccessRate(player2.JerseyNumber, TeamSide.Away):F2}%");
+                Console.WriteLine($"  失誤次數: {statsEngine.GetPlayerErrorCount(player2.JerseyNumber, TeamSide.Away)}");
+            }
+
             Console.WriteLine("\n── 得分來源分析 ──");
             var homeScoring = statsEngine.GetTeamScoringBreakdown(TeamSide.Home);
             Console.WriteLine($"主隊得分來源: 攻擊 {homeScoring[ActionType.AttackSuccess]} | " +

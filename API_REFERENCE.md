@@ -56,11 +56,11 @@ scoring.MatchFinished += (sender, winner) => { };       // TeamSide.Home/Away
 ```csharp
 StatisticsEngine stats = new StatisticsEngine(eventManager, match);
 
-// 個人統計
-double attackRate = stats.GetPlayerAttackSuccessRate(1, TeamSide.Home);    // 66.67%
-double serveRate = stats.GetPlayerServeSuccessRate(1, TeamSide.Home);      // 100.00%
-int scores = stats.GetPlayerScoresTotals(1, TeamSide.Home); // 5
-int errors = stats.GetPlayerErrorCount(1, TeamSide.Home); // 2
+// 個人統計（現已包含 TeamSide 參數）
+double attackRate = stats.GetPlayerAttackSuccessRate(1, TeamSide.Home);     // 66.67%
+double serveRate = stats.GetPlayerServeSuccessRate(1, TeamSide.Home);       // 100.00%
+int scores = stats.GetPlayerScoresTotals(1, TeamSide.Home);                 // 5
+int errors = stats.GetPlayerErrorCount(1, TeamSide.Home);                   // 2
 
 // 隊伍統計
 double homeAttack = stats.GetTeamAttackSuccessRate(TeamSide.Home);
@@ -68,14 +68,14 @@ double homeServe = stats.GetTeamServeSuccessRate(TeamSide.Home);
 
 // 得分來源分析
 var breakdown = stats.GetTeamScoringBreakdown(TeamSide.Home);
-int attackScores = breakdown[ActionType.AttackSuccess];      // 5
-int blockScores = breakdown[ActionType.BlockSuccess];        // 2
-int serveScores = breakdown[ActionType.ServeSuccess];        // 1
+int attackScores = breakdown[ActionType.AttackSuccess];                     // 5
+int blockScores = breakdown[ActionType.BlockSuccess];                       // 2
+int serveScores = breakdown[ActionType.ServeSuccess];                       // 1
 
 // 失誤統計
 var errors = stats.GetTeamErrorBreakdown(TeamSide.Home);
-int attackErrors = errors[ActionType.AttackFault];          // 3
-int serveErrors = errors[ActionType.ServeFault];            // 1
+int attackErrors = errors[ActionType.AttackFault];                          // 3
+int serveErrors = errors[ActionType.ServeFault];                            // 1
 
 // 趨勢分析
 var trendData = stats.GetScoreTrendData();  // 返回 List<(int Time, int HomeScore, int AwayScore)>
@@ -83,8 +83,14 @@ foreach (var (time, homeScore, awayScore) in trendData) {
     Console.WriteLine($"回合 {time}: {homeScore} - {awayScore}");
 }
 
-// 失誤密集點
+// 失誤密集點 - 返回時間戳和全域索引信息
 var clusters = stats.GetErrorClusterPoints(TeamSide.Home, windowSize: 5);
+foreach (var cluster in clusters) {
+    Console.WriteLine($"失誤密集 | 時間: {cluster.StartTimestamp:HH:mm:ss} - {cluster.EndTimestamp:HH:mm:ss}");
+    Console.WriteLine($"  失誤數: {cluster.ErrorCount}/{cluster.WindowSize}");
+    Console.WriteLine($"  全域索引: {cluster.GlobalEventStartIndex}");
+    Console.WriteLine($"  持續時間: {cluster.Duration.TotalSeconds:F1} 秒");
+}
 
 // 生成報告
 string report = stats.GenerateStatisticsReport();
@@ -260,6 +266,10 @@ scoring.ProcessGameEvent(evt2);  // 比分: 1-1
 
 // 4. 查詢統計
 Console.WriteLine($"主隊攻擊成功率: {stats.GetTeamAttackSuccessRate(TeamSide.Home):F2}%");
+
+// 球員個人統計（注意現在需要指定 TeamSide）
+Console.WriteLine($"球員 #1 (主隊) 攻擊成功率: {stats.GetPlayerAttackSuccessRate(1, TeamSide.Home):F2}%");
+Console.WriteLine($"球員 #2 (客隊) 發球成功率: {stats.GetPlayerServeSuccessRate(2, TeamSide.Away):F2}%");
 
 // 5. 導出數據
 CsvExporter.ExportEventsToCSV(eventManager, match, "events.csv");
