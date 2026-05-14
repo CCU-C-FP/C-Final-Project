@@ -211,7 +211,6 @@ public partial class MainForm : Form {
 |------|------|
 | [ARCHITECTURE.md](./ARCHITECTURE.md) | 完整的架構設計、設計原則、工作流程詳解 |
 | [API_REFERENCE.md](./API_REFERENCE.md) | API 快速參考、代碼示例、數據模型文檔 |
-| [PROJECT_STATUS.md](./PROJECT_STATUS.md) | 項目狀態、功能清單、開發建議 |
 
 ---
 
