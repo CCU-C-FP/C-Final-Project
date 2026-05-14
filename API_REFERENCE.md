@@ -60,7 +60,7 @@ StatisticsEngine stats = new StatisticsEngine(eventManager, match);
 double attackRate = stats.GetPlayerAttackSuccessRate(1, TeamSide.Home);    // 66.67%
 double serveRate = stats.GetPlayerServeSuccessRate(1, TeamSide.Home);      // 100.00%
 int scores = stats.GetPlayerScoresTotals(1, TeamSide.Home); // 5
-int errors = stats.GetPlayerErrorCount(1, TeamSide.Home);    // 2
+int errors = stats.GetPlayerErrorCount(1, TeamSide.Home); // 2
 
 // 隊伍統計
 double homeAttack = stats.GetTeamAttackSuccessRate(TeamSide.Home);
