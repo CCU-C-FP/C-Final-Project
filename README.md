@@ -61,7 +61,6 @@ src/MyProject/
 文檔:
 ├── ARCHITECTURE.md             # 完整架構設計
 ├── API_REFERENCE.md            # API 快速參考
-├── PROJECT_STATUS.md           # 項目狀態報告
 └── README.md                   # 本文件
 ```
 
