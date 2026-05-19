@@ -23,3 +23,10 @@ packages/
 # === 作業系統垃圾 ===
 .DS_Store
 Thumbs.db
+
+
+
+# 自用日誌
+docs_archive/
+
+
