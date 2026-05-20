@@ -69,6 +69,7 @@ namespace MyProject.Services
                 case ActionType.ServeFault:
                 case ActionType.ReceiveFault:
                 case ActionType.TossFault:
+                case ActionType.AttackOutOfBounds:
                     if (gameEvent.Team == TeamSide.Home)
                         awayTeamScored = true;
                     else
