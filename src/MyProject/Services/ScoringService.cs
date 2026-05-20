@@ -44,6 +44,12 @@ namespace MyProject.Services
         /// 根據比賽事件更新比分
         public void ProcessGameEvent(GameEvent gameEvent)
         {
+            ProcessGameEvent(gameEvent, suppressNotifications: false);
+        }
+
+        /// 根據比賽事件更新比分
+        private void ProcessGameEvent(GameEvent gameEvent, bool suppressNotifications)
+        {
             if (gameEvent == null || _match == null)
                 return;
 
@@ -69,7 +75,7 @@ namespace MyProject.Services
                 case ActionType.ServeFault:
                 case ActionType.ReceiveFault:
                 case ActionType.TossFault:
-                case ActionType.AttackOutOfBounds:
+                case ActionType.AttackOutOfBounds:                
                     if (gameEvent.Team == TeamSide.Home)
                         awayTeamScored = true;
                     else
@@ -103,10 +109,13 @@ namespace MyProject.Services
             }
 
             // 檢查局是否結束
-            CheckSetCompletion();
+            CheckSetCompletion(suppressNotifications);
 
-            // 通知 UI 層比分已更新
-            ScoreUpdated?.Invoke(this, _match.GetCurrentScore());
+            if (!suppressNotifications)
+            {
+                // 通知 UI 層比分已更新
+                ScoreUpdated?.Invoke(this, _match.GetCurrentScore());
+            }
         }
 
         /// 增加隊伍比分
@@ -132,7 +141,7 @@ namespace MyProject.Services
 
         /// 檢查目前局是否結束
         /// 雙軌制規則：25分先勝制，需差2分
-        private void CheckSetCompletion()
+        private void CheckSetCompletion(bool suppressNotifications = false)
         {
             int homeScore = _match.HomeTeam.GetCurrentSetScore(_match.CurrentSetNumber);
             int awayScore = _match.AwayTeam.GetCurrentSetScore(_match.CurrentSetNumber);
@@ -154,13 +163,13 @@ namespace MyProject.Services
 
             if (setFinished)
             {
-                OnSetFinished(setWinner);
+                OnSetFinished(setWinner, suppressNotifications);
             }
         }
 
 
         /// 局結束處理
-        private void OnSetFinished(TeamSide setWinner)
+        private void OnSetFinished(TeamSide setWinner, bool suppressNotifications = false)
         {
             // 更新局數獲勝計數
             if (setWinner == TeamSide.Home)
@@ -172,15 +181,18 @@ namespace MyProject.Services
                 _match.AwayTeam.SetsWon++;
             }
 
-            SetFinished?.Invoke(this, setWinner == TeamSide.Home ? 0 : 1);
+            if (!suppressNotifications)
+            {
+                SetFinished?.Invoke(this, setWinner == TeamSide.Home ? 0 : 1);
+            }
 
             // 檢查比賽是否結束
-            CheckMatchCompletion();
+            CheckMatchCompletion(suppressNotifications);
         }
 
         /// 檢查比賽是否結束
         /// 三先勝制：先贏2局者獲勝
-        private void CheckMatchCompletion()
+        private void CheckMatchCompletion(bool suppressNotifications = false)
         {
             if (_match.HomeTeam.SetsWon >= 2 || _match.AwayTeam.SetsWon >= 2)
             {
@@ -189,8 +201,11 @@ namespace MyProject.Services
                 
                 _match.FinishMatch();
                 
-                // 觸發比賽結束事件
-                MatchFinished?.Invoke(this, matchWinner);
+                if (!suppressNotifications)
+                {
+                    // 觸發比賽結束事件
+                    MatchFinished?.Invoke(this, matchWinner);
+                }
             }
             else
             {
@@ -230,7 +245,7 @@ namespace MyProject.Services
                 var allEvents = _eventManager.GetAllEvents();
                 foreach (var evt in allEvents)
                 {
-                    ProcessGameEvent(evt);
+                    ProcessGameEvent(evt, suppressNotifications: true);
                 }
             }
 

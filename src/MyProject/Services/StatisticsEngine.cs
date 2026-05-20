@@ -113,7 +113,8 @@ namespace MyProject.Services
                 ActionType.ServeFault,
                 ActionType.BlockFault,
                 ActionType.ReceiveFault,
-                ActionType.TossFault
+                ActionType.TossFault,
+                ActionType.AttackOutOfBounds
             };
 
             var allEvents = _eventManager.GetAllEvents();
@@ -132,7 +133,8 @@ namespace MyProject.Services
             var scoringActions = new[] 
             { 
                 ActionType.AttackSuccess, 
-                ActionType.BlockSuccess
+                ActionType.BlockSuccess,
+                ActionType.ServeSuccess
             };
 
             return _eventManager.GetEventsByPlayer(playerId)
@@ -151,7 +153,9 @@ namespace MyProject.Services
                 ActionType.ServeFault,
                 ActionType.BlockFault,
                 ActionType.ReceiveFault,
-                ActionType.TossFault
+                ActionType.TossFault,
+                ActionType.AttackOutOfBounds
+                
             };
 
             return _eventManager.GetEventsByPlayer(playerId)
@@ -165,9 +169,21 @@ namespace MyProject.Services
             int homeScore = 0;
             int awayScore = 0;
             int time = 0;
+            int? currentSetNumber = null;
 
-            foreach (var evt in _eventManager.GetAllEvents().OrderBy(e => e.Timestamp))
-            {
+
+           foreach (var evt in _eventManager.GetAllEvents()
+                 .OrderBy(e => e.SetNumber)
+                 .ThenBy(e => e.Timestamp))
+             {
+                 if (currentSetNumber != evt.SetNumber)
+                 {
+                     currentSetNumber = evt.SetNumber;
+                     homeScore = 0;
+                     awayScore = 0;
+                     time = 0;
+                 }
+
                 bool homeScored = false;
                 bool awayScored = false;
 
@@ -187,6 +203,7 @@ namespace MyProject.Services
                     case ActionType.ServeFault:
                     case ActionType.ReceiveFault:
                     case ActionType.TossFault:
+                    case ActionType.AttackOutOfBounds:
                         if (evt.Team == TeamSide.Home) awayScored = true;
                         else homeScored = true;
                         break;
@@ -225,7 +242,9 @@ namespace MyProject.Services
                 ActionType.ServeFault,
                 ActionType.BlockFault,
                 ActionType.ReceiveFault,
-                ActionType.TossFault
+                ActionType.TossFault,
+                ActionType.AttackOutOfBounds
+                
             };
 
             for (int i = 0; i <= teamEvents.Count - windowSize; i++)
