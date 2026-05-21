@@ -55,7 +55,7 @@
 - ✅ CSV 導出演示
 
 ### 7. **文檔** 
-- ✅ `ARCHITECTURE.md` - 完整架構設計文檔
+- ℹ️ 架構設計文檔 - 待補齊（目前 repo 未包含 `ARCHITECTURE.md`）
 - ✅ `API_REFERENCE.md` - API 快速參考指南
 - ✅ `PROJECT_STATUS.md` - 本文檔
 
