@@ -43,7 +43,7 @@ scoring.SetTeamScore(TeamSide.Home, 15);
 
 // 查詢比分
 string currentScore = scoring.GetCurrentScore();        // "15-12"
-string detailedScore = scoring.GetDetailedScore();      // "25-22 15-12"
+string detailedScore = scoring.GetDetailedScore();      // "主隊: 25-22 | 客隊: 15-12"
 
 // 事件訂閱
 scoring.ScoreUpdated += (sender, score) => { };
