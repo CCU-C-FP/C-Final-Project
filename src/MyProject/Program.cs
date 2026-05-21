@@ -61,8 +61,14 @@ namespace MyProject
             // 7. 導出數據
             Console.WriteLine("\n[第 7 步] 導出數據...");
             string desktopPath = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
-            string eventsCsvPath = Path.Combine(desktopPath, "volleyball_events.csv");
-            string statsCsvPath = Path.Combine(desktopPath, "volleyball_statistics.csv");
+            string exportDirectory = !string.IsNullOrWhiteSpace(desktopPath) && Directory.Exists(desktopPath)
+                ? desktopPath
+                : Directory.GetCurrentDirectory();
+
+            Directory.CreateDirectory(exportDirectory);
+
+            string eventsCsvPath = Path.Combine(exportDirectory, "volleyball_events.csv");
+            string statsCsvPath = Path.Combine(exportDirectory, "volleyball_statistics.csv");
 
             if (CsvExporter.ExportEventsToCSV(eventManager, match, eventsCsvPath))
                 Console.WriteLine($"✓ 事件資料已導出至: {eventsCsvPath}");
