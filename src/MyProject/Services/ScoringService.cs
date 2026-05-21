@@ -38,6 +38,8 @@ namespace MyProject.Services
             {
                 _eventManager.EventUndone += (sender, evt) => RecalculateScores();
                 _eventManager.EventRedone += (sender, evt) => RecalculateScores();
+                // 當事件歷史被清空時，重置或重算比分以保持狀態同步
+                _eventManager.EventsCleared += (sender, evt) => RecalculateScores();
             }
         }
 

@@ -24,7 +24,8 @@ namespace MyProject.Services
                 .Where(e => e.Team == team &&
                            (e.Action == ActionType.AttackSuccess || 
                             e.Action == ActionType.AttackFault ||
-                            e.Action == ActionType.AttackBlocked))
+                            e.Action == ActionType.AttackBlocked||
+                            e.Action == ActionType.AttackOutOfBounds))
                 .ToList();
 
             if (attacks.Count == 0)
@@ -57,7 +58,8 @@ namespace MyProject.Services
                 .Where(e => e.Team == team &&
                            (e.Action == ActionType.AttackSuccess ||
                             e.Action == ActionType.AttackFault ||
-                            e.Action == ActionType.AttackBlocked))
+                            e.Action == ActionType.AttackBlocked||
+                            e.Action == ActionType.AttackOutOfBounds))
                 .ToList();
 
             if (attacks.Count == 0)

@@ -31,6 +31,10 @@ namespace MyProject.Services
         public event EventHandler<GameEvent>? EventAdded;
         public event EventHandler<GameEvent>? EventUndone;
         public event EventHandler<GameEvent>? EventRedone;
+        /// <summary>
+        /// 當所有事件被清除時通知訂閱者（例如讓 ScoringService 重置分數）
+        /// </summary>
+        public event EventHandler? EventsCleared;
 
         /// <summary>
         /// 建立新的事件管理器
@@ -120,6 +124,8 @@ namespace MyProject.Services
             _events.Clear();
             _undoStack.Clear();
             _redoStack.Clear();
+            // 通知所有訂閱者事件歷史已被清空
+            EventsCleared?.Invoke(this, System.EventArgs.Empty);
         }
 
         /// 取得事件總數

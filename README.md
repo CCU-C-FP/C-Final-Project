@@ -71,7 +71,7 @@ src/MyProject/
 ### 1. 編譯項目
 
 ```bash
-cd src\MyProject
+cd src/MyProject
 dotnet build
 ```
 
