@@ -233,6 +233,11 @@ namespace MyProject.Services
                 throw new ArgumentOutOfRangeException(nameof(windowSize), "視窗大小必須大於 0");
 
             var allEvents = _eventManager.GetAllEvents();
+            var eventIndexMap = new Dictionary<GameEvent, int>();
+            for (int i = 0; i < allEvents.Count; i++)
+            {
+                eventIndexMap[allEvents[i]] = i;
+            }
             var teamEvents = allEvents
                 .Where(e => e.Team == team)
                 .ToList();
@@ -267,7 +272,7 @@ namespace MyProject.Services
                     var endEvent = windowEvents.Last();
 
                     // 計算全域事件索引（在完整事件清單中的位置）
-                    int globalEventStartIndex = allEvents.IndexOf(startEvent);
+                    int globalEventStartIndex = eventIndexMap[startEvent];
 
                     var clusterInfo = new ErrorClusterInfo(
                         startEvent.Timestamp,
