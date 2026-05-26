@@ -223,7 +223,6 @@ namespace MyProject.Services
          
         /// 取得失誤密集點（連續失誤集群）
         /// 分析隊伍事件中是否存在集中的失誤時期
-        /// </summary>
         /// <param name="team">分析的隊伍</param>
         /// <param name="windowSize">滑動視窗大小（預設 5 個事件）</param>
         /// <returns>包含時間戳和全域索引的失誤集群清單</returns>
@@ -233,12 +232,16 @@ namespace MyProject.Services
                 throw new ArgumentOutOfRangeException(nameof(windowSize), "視窗大小必須大於 0");
 
             var allEvents = _eventManager.GetAllEvents();
+            var orderedEvents = allEvents
+                .OrderBy(e => e.SetNumber)
+                .ThenBy(e => e.Timestamp)
+                .ToList();
             var eventIndexMap = new Dictionary<GameEvent, int>();
-            for (int i = 0; i < allEvents.Count; i++)
+            for (int i = 0; i < orderedEvents.Count; i++)
             {
-                eventIndexMap[allEvents[i]] = i;
+                eventIndexMap[orderedEvents[i]] = i;
             }
-            var teamEvents = allEvents
+            var teamEvents = orderedEvents
                 .Where(e => e.Team == team)
                 .ToList();
 
