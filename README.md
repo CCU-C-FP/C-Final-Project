@@ -42,13 +42,14 @@
 ```
 src/MyProject/
 ├── Models/                      # 數據模型層
-│   ├── ActionType.cs           # 動作類型 (18 種)
+│   ├── ActionType.cs           # 動作類型 (17 種)
 │   ├── Player.cs               # 球員
 │   ├── GameEvent.cs            # 比賽事件
 │   ├── Team.cs                 # 隊伍
 │   └── Match.cs                # 比賽
 │
 ├── Services/                    # 業務邏輯層
+|   ├── ErrorClusterInfo.cs
 │   ├── EventManager.cs         # 事件管理 (新增/撤銷/重做)
 │   ├── ScoringService.cs       # 評分邏輯 (自動計分)
 │   └── StatisticsEngine.cs     # 統計分析
@@ -268,8 +269,14 @@ public partial class MainForm : Form {
 ---
 
 **版本：** 1.0.0 (核心邏輯層)  
-**最後更新：** 2026-05-14  
+**版本：** 1.0.1 (核心邏輯層)  
+**最後更新：** 2026-05-26  
 **狀態：** ✅ 完成並測試
+
+---
+
+## 變更紀錄
+- 2026-05-26: 更新 README 最後更新日期與版本號
 
 ---
 
