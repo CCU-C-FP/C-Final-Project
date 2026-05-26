@@ -1,263 +1,305 @@
-# API 快速參考
+# API 參考
 
-## EventManager - 事件管理
+本文檔對應目前 `src/MyProject` 的實作，重點整理事件管理、計分、統計與導出工具的公開 API。
 
-```csharp
-EventManager manager = new EventManager();
+## 命名空間
 
-// 新增事件
-manager.AddEvent(new GameEvent(...));
+- `MyProject.Models`
+- `MyProject.Services`
+- `MyProject.Utilities`
 
-// 撤銷/重做
-manager.Undo();                          // 撤銷上一個事件
-manager.Redo();                          // 重做上一個被撤銷的事件
-bool canUndo = manager.CanUndo();        // 是否可撤銷
-bool canRedo = manager.CanRedo();        // 是否可重做
+## 快速總覽
 
-// 查詢事件
-List<GameEvent> all = manager.GetAllEvents();
-List<GameEvent> byPlayer = manager.GetEventsByPlayer(1);
-List<GameEvent> byAction = manager.GetEventsByAction(ActionType.AttackSuccess);
-List<GameEvent> bySet = manager.GetEventsBySet(1);
+| 類別 | 角色 |
+|------|------|
+| `EventManager` | 管理事件清單、撤銷、重做與事件通知 |
+| `ScoringService` | 根據事件自動更新比分與局數 |
+| `StatisticsEngine` | 計算個人、隊伍、趨勢與失誤集群統計 |
+| `CsvExporter` | 匯出事件與統計報告為 CSV |
+| `GameEvent` / `Player` / `Team` / `Match` | 核心資料模型 |
 
-// 狀態
-int count = manager.GetEventCount();
-manager.ClearAllEvents();
+## EventManager
 
-// 事件訂閱
-manager.EventAdded += (sender, evt) => { };
-manager.EventUndone += (sender, evt) => { };
-manager.EventRedone += (sender, evt) => { };
-```
+負責維護比賽事件，並用事件通知讓 UI 或其他服務層同步狀態。
 
-## ScoringService - 評分管理
+### 建構子
 
 ```csharp
-ScoringService scoring = new ScoringService(match, eventManager);
-
-// 處理事件並自動計分
-scoring.ProcessGameEvent(gameEvent);
-
-// 手動設定比分
-scoring.SetTeamScore(TeamSide.Home, 15);
-
-// 查詢比分
-string currentScore = scoring.GetCurrentScore();        // "15-12"
-string detailedScore = scoring.GetDetailedScore();      // "主隊: 25-22 | 客隊: 15-12"
-
-// 事件訂閱
-scoring.ScoreUpdated += (sender, score) => { };
-scoring.SetFinished += (sender, winner) => { };         // 0=Home, 1=Away
-scoring.MatchFinished += (sender, winner) => { };       // TeamSide.Home/Away
-```
-
-## StatisticsEngine - 統計分析
-
-```csharp
-StatisticsEngine stats = new StatisticsEngine(eventManager, match);
-
-// 個人統計（現已包含 TeamSide 參數）
-double attackRate = stats.GetPlayerAttackSuccessRate(1, TeamSide.Home);     // 66.67%
-double serveRate = stats.GetPlayerServeSuccessRate(1, TeamSide.Home);       // 100.00%
-int scores = stats.GetPlayerScoresTotals(1, TeamSide.Home);                 // 5
-int errors = stats.GetPlayerErrorCount(1, TeamSide.Home);                   // 2
-
-// 隊伍統計
-double homeAttack = stats.GetTeamAttackSuccessRate(TeamSide.Home);
-double homeServe = stats.GetTeamServeSuccessRate(TeamSide.Home);
-
-// 得分來源分析
-var breakdown = stats.GetTeamScoringBreakdown(TeamSide.Home);
-int attackScores = breakdown[ActionType.AttackSuccess];                     // 5
-int blockScores = breakdown[ActionType.BlockSuccess];                       // 2
-int serveScores = breakdown[ActionType.ServeSuccess];                       // 1
-
-// 失誤統計
-var errors = stats.GetTeamErrorBreakdown(TeamSide.Home);
-int attackErrors = errors[ActionType.AttackFault];                          // 3
-int serveErrors = errors[ActionType.ServeFault];                            // 1
-
-// 趨勢分析
-var trendData = stats.GetScoreTrendData();  // 返回 List<(int Time, int HomeScore, int AwayScore)>
-foreach (var (time, homeScore, awayScore) in trendData) {
-    Console.WriteLine($"回合 {time}: {homeScore} - {awayScore}");
-}
-
-// 失誤密集點 - 返回時間戳和全域索引信息
-var clusters = stats.GetErrorClusterPoints(TeamSide.Home, windowSize: 5);
-foreach (var cluster in clusters) {
-    Console.WriteLine($"失誤密集 | 時間: {cluster.StartTimestamp:HH:mm:ss} - {cluster.EndTimestamp:HH:mm:ss}");
-    Console.WriteLine($"  失誤數: {cluster.ErrorCount}/{cluster.WindowSize}");
-    Console.WriteLine($"  全域索引: {cluster.GlobalEventStartIndex}");
-    Console.WriteLine($"  持續時間: {cluster.Duration.TotalSeconds:F1} 秒");
-}
-
-// 生成報告
-string report = stats.GenerateStatisticsReport();
-```
-
-## CsvExporter - 資料導出
-
-```csharp
-// 導出事件
-bool success = CsvExporter.ExportEventsToCSV(
-    eventManager, 
-    match, 
-    "C:\\events.csv"
-);
-
-// 導出統計
-bool success = CsvExporter.ExportStatisticsToCSV(
-    statistics, 
-    match, 
-    eventManager, 
-    "C:\\statistics.csv"
-);
-```
-
-## 數據模型
-
-### ActionType 
-```csharp
-// 發球
-ActionType.ServeSuccess       // 發球成功
-ActionType.ServeFault         // 發球失誤
-
-// 攻擊
-ActionType.AttackSuccess      // 攻擊得分
-ActionType.AttackFault        // 攻擊失誤
-ActionType.AttackBlocked      // 被攔網
-ActionType.AttackOutOfBounds  // 出界
-
-// 攔網
-ActionType.BlockSuccess       // 攔網成功
-ActionType.BlockFault         // 攔網失誤
-
-// 防守
-ActionType.ReceiveSuccess     // 接球成功
-ActionType.ReceiveFault       // 接球失誤
-
-// 傳球
-ActionType.TossSuccess        // 傳球成功
-ActionType.TossFault          // 傳球失誤
-
-// 其他
-ActionType.TeamScore          // 團隊得分
-ActionType.Substitution       // 替補
-ActionType.Timeout            // 暫停
-ActionType.TechnicalFault     // 技術犯規
-ActionType.Other              // 其他
-```
-
-### TeamSide 
-```csharp
-TeamSide.Home   // 主隊
-TeamSide.Away   // 客隊
-```
-
-### GameEvent (類別)
-```csharp
-public class GameEvent {
-    public DateTime Timestamp { get; set; }    // 事件時刻
-    public int PlayerId { get; set; }          // 球員背號 (0=隊伍)
-    public ActionType Action { get; set; }     // 動作類型
-    public string Score { get; set; }          // 比分 "25-22"
-    public TeamSide Team { get; set; }         // 隊伍
-    public int SetNumber { get; set; }         // 局數
-    public string Notes { get; set; }          // 備註
-}
-
-// 建構子
-GameEvent evt = new GameEvent();
-GameEvent evt = new GameEvent(1, ActionType.AttackSuccess, "1-0", TeamSide.Home, 1);
-```
-
-### Player (類別)
-```csharp
-public class Player {
-    public int JerseyNumber { get; set; }      // 背號
-    public string Name { get; set; }           // 姓名
-    public string Position { get; set; }       // 位置
-    public int Height { get; set; }            // 身高
-    public bool IsActive { get; set; }         // 是否在場
-    public TeamSide Team { get; set; }         // 隊伍
-}
-
-// 建構子
-Player p = new Player(1, "王小明", "主攻", TeamSide.Home);
-```
-
-### Team (類別)
-```csharp
-public class Team {
-    public TeamSide Side { get; set; }         // 隊伍標識
-    public string TeamName { get; set; }       // 隊伍名稱
-    public List<Player> Players { get; set; }  // 球員列表
-    public Dictionary<int, int> SetScores { get; set; }  // 各局比分
-    public int SetsWon { get; set; }           // 贏得局數
-}
-
-// 建構子
-Team home = new Team(TeamSide.Home, "台北虎隊");
-
-// 方法
-home.AddPlayer(player);                        // 新增球員
-Player? p = home.GetPlayerByNumber(1);         // 查詢球員
-int score = home.GetCurrentSetScore(1);        // 取得第1局分數
-home.UpdateCurrentSetScore(1, 15);             // 設定第1局分數
-home.StartNewSet(2);                           // 開始第2局
-List<Player> active = home.GetActivePlayers(); // 取得在場球員
-```
-
-### Match (類別)
-```csharp
-public class Match {
-    public Team HomeTeam { get; set; }         // 主隊
-    public Team AwayTeam { get; set; }         // 客隊
-    public DateTime StartTime { get; set; }    // 開始時間
-    public MatchStatus Status { get; set; }    // 比賽狀態
-    public int CurrentSetNumber { get; set; }  // 目前局數
-    public string Venue { get; set; }          // 場地
-}
-
-// 建構子
-Match match = new Match(homeTeam, awayTeam, "中正紀念堂");
-
-// 方法
-match.StartMatch();                            // 開始比賽
-match.PauseMatch();                            // 暫停比賽
-match.ResumeMatch();                           // 繼續比賽
-match.FinishMatch();                           // 結束比賽
-string score = match.GetCurrentScore();        // 取得比分 "15-12"
-```
-
----
-
-## 完整示例
-
-```csharp
-// 1. 初始化
-var homeTeam = new Team(TeamSide.Home, "主隊");
-homeTeam.AddPlayer(new Player(1, "球員1", "主攻", TeamSide.Home));
-homeTeam.AddPlayer(new Player(2, "球員2", "邊攻", TeamSide.Home));
-
-var awayTeam = new Team(TeamSide.Away, "客隊");
-awayTeam.AddPlayer(new Player(1, "球員3", "主攻", TeamSide.Away));
-awayTeam.AddPlayer(new Player(2, "球員4", "邊攻", TeamSide.Away));
-
-var match = new Match(homeTeam, awayTeam);
 var eventManager = new EventManager();
-var scoring = new ScoringService(match, eventManager);
-var stats = new StatisticsEngine(eventManager, match);
+```
 
-// 2. 訂閱事件
-scoring.ScoreUpdated += (_, score) => Console.WriteLine($"比分: {score}");
-eventManager.EventAdded += (_, evt) => Console.WriteLine($"事件: {evt}");
+### 事件
 
-// 3. 記錄事件
+- `EventAdded`
+- `EventUndone`
+- `EventRedone`
+- `EventsCleared`
+
+### 方法
+
+```csharp
+void AddEvent(GameEvent gameEvent)
+bool Undo()
+bool Redo()
+List<GameEvent> GetAllEvents()
+List<GameEvent> GetEventsByPlayer(int playerId)
+List<GameEvent> GetEventsByAction(ActionType action)
+List<GameEvent> GetEventsBySet(int setNumber)
+void ClearAllEvents()
+int GetEventCount()
+bool CanUndo()
+bool CanRedo()
+```
+
+### 行為重點
+
+- `AddEvent` 會清空 redo 棧。
+- `GetAllEvents` 回傳副本，不直接暴露內部集合。
+- `ClearAllEvents` 會觸發 `EventsCleared`，適合讓 `ScoringService` 重算。
+
+## ScoringService
+
+負責把事件轉成比分變化，並處理雙軌制局分與三先勝制比賽結束條件。
+
+### 建構子
+
+```csharp
+var scoringService = new ScoringService(match, eventManager);
+```
+
+### 事件
+
+- `ScoreUpdated`：比分更新時觸發，回傳新的比分字串。
+- `SetFinished`：單局結束時觸發，回傳獲勝方編號，`0` 代表主隊，`1` 代表客隊。
+- `MatchFinished`：比賽結束時觸發，回傳獲勝隊伍 `TeamSide`。
+
+### 方法
+
+```csharp
+void ProcessGameEvent(GameEvent gameEvent)
+void SetTeamScore(TeamSide team, int score)
+string GetCurrentScore()
+string GetDetailedScore()
+```
+
+### 規則
+
+- `AttackSuccess`、`BlockSuccess`、`ServeSuccess` 視為得分事件。
+- `AttackFault`、`BlockFault`、`ServeFault`、`ReceiveFault`、`TossFault`、`AttackOutOfBounds` 視為對方得分。
+- `TeamScore` 直接為指定隊伍加分。
+- `Timeout`、`Substitution`、`TechnicalFault`、`Other` 不直接改變比分。
+- 單局採 25 分先勝制，且需領先 2 分。
+- 比賽採先贏 2 局者獲勝。
+
+### 同步機制
+
+`ScoringService` 會訂閱 `EventManager` 的 `EventUndone`、`EventRedone`、`EventsCleared`，在事件歷史改變時重新計算比分。
+
+## StatisticsEngine
+
+負責以事件清單與比賽資料產生統計結果。
+
+### 建構子
+
+```csharp
+var statistics = new StatisticsEngine(eventManager, match);
+```
+
+### 方法
+
+```csharp
+double GetPlayerAttackSuccessRate(int playerId, TeamSide team)
+double GetPlayerServeSuccessRate(int playerId, TeamSide team)
+double GetTeamAttackSuccessRate(TeamSide team)
+double GetTeamServeSuccessRate(TeamSide team)
+Dictionary<ActionType, int> GetTeamScoringBreakdown(TeamSide team)
+Dictionary<ActionType, int> GetTeamErrorBreakdown(TeamSide team)
+int GetPlayerScoresTotals(int playerId, TeamSide team)
+int GetPlayerErrorCount(int playerId, TeamSide team)
+List<(int Time, int HomeScore, int AwayScore)> GetScoreTrendData()
+List<ErrorClusterInfo> GetErrorClusterPoints(TeamSide team, int windowSize = 5)
+string GenerateStatisticsReport()
+```
+
+### 設計重點
+
+- 球員統計都需要同時指定 `playerId` 與 `TeamSide`，避免兩隊同背號造成混淆。
+- `GetScoreTrendData` 會按局數與時間排序，回傳比分進度序列。
+- `GetErrorClusterPoints` 會找出指定隊伍在滑動窗口內的失誤密集點，`windowSize` 必須大於 0。
+
+### `ErrorClusterInfo`
+
+```csharp
+DateTime StartTimestamp
+DateTime EndTimestamp
+int GlobalEventStartIndex
+int ErrorCount
+int WindowSize
+TimeSpan Duration
+```
+
+## CsvExporter
+
+提供 CSV 匯出功能，適合做後續報表或外部分析。
+
+### 方法
+
+```csharp
+bool ExportEventsToCSV(EventManager eventManager, Match match, string filePath)
+bool ExportStatisticsToCSV(StatisticsEngine statistics, Match match, EventManager eventManager, string filePath)
+```
+
+### 輸出內容
+
+- 事件 CSV 會輸出時間、球員背號、動作、隊伍、局數、比分與備註。
+- 統計 CSV 會輸出基本比賽資訊、隊伍統計、得分來源與球員統計。
+
+### 轉義規則
+
+- 會自動處理含逗號、引號與換行的欄位。
+- 匯出失敗時會回傳 `false` 並寫出錯誤訊息。
+
+## Models
+
+### ActionType
+
+主要動作類型如下：
+
+- `ServeSuccess`, `ServeFault`
+- `AttackSuccess`, `AttackFault`, `AttackBlocked`, `AttackOutOfBounds`
+- `BlockSuccess`, `BlockFault`
+- `ReceiveSuccess`, `ReceiveFault`
+- `TossSuccess`, `TossFault`
+- `TeamScore`, `Substitution`, `Timeout`, `TechnicalFault`, `Other`
+
+### MatchStatus
+
+- `NotStarted`
+- `InProgress`
+- `Paused`
+- `Finished`
+
+### TeamSide
+
+- `Home`
+- `Away`
+
+### GameEvent
+
+```csharp
+public class GameEvent
+{
+    public DateTime Timestamp { get; set; }
+    public int PlayerId { get; set; }
+    public ActionType Action { get; set; }
+    public string Score { get; set; }
+    public TeamSide Team { get; set; }
+    public int SetNumber { get; set; }
+    public string Notes { get; set; }
+}
+```
+
+建構子：
+
+```csharp
+GameEvent()
+GameEvent(int playerId, ActionType action, string score, TeamSide team, int setNumber = 1)
+```
+
+### Player
+
+```csharp
+public class Player
+{
+    public int JerseyNumber { get; set; }
+    public string Name { get; set; }
+    public string Position { get; set; }
+    public int Height { get; set; }
+    public bool IsActive { get; set; }
+    public TeamSide Team { get; set; }
+}
+```
+
+建構子：
+
+```csharp
+Player(int jerseyNumber, string name, string position, TeamSide team)
+Player()
+```
+
+### Team
+
+```csharp
+public class Team
+{
+    public TeamSide Side { get; set; }
+    public string TeamName { get; set; }
+    public List<Player> Players { get; set; }
+    public Dictionary<int, int> SetScores { get; set; }
+    public int SetsWon { get; set; }
+}
+```
+
+建構子與方法：
+
+```csharp
+Team(TeamSide side, string teamName)
+void AddPlayer(Player player)
+Player? GetPlayerByNumber(int jerseyNumber)
+int GetCurrentSetScore(int currentSetNumber)
+void UpdateCurrentSetScore(int currentSetNumber, int newScore)
+void StartNewSet(int nextSetNumber)
+List<Player> GetActivePlayers()
+```
+
+### Match
+
+```csharp
+public class Match
+{
+    public Team HomeTeam { get; set; }
+    public Team AwayTeam { get; set; }
+    public DateTime StartTime { get; set; }
+    public MatchStatus Status { get; set; }
+    public int CurrentSetNumber { get; set; }
+    public string Venue { get; set; }
+}
+```
+
+建構子與方法：
+
+```csharp
+Match(Team homeTeam, Team awayTeam, string venue = "")
+void StartMatch()
+void PauseMatch()
+void ResumeMatch()
+void FinishMatch()
+string GetCurrentScore()
+```
+
+## 建議使用流程
+
+```csharp
+var homeTeam = new Team(TeamSide.Home, "主隊");
+var awayTeam = new Team(TeamSide.Away, "客隊");
+var match = new Match(homeTeam, awayTeam, "中正紀念堂排球館");
+var eventManager = new EventManager();
+var scoringService = new ScoringService(match, eventManager);
+var statistics = new StatisticsEngine(eventManager, match);
+
 match.StartMatch();
-var evt1 = new GameEvent(1, ActionType.ServeSuccess, "0-0", TeamSide.Home, 1);
-eventManager.AddEvent(evt1);
+
+var gameEvent = new GameEvent(1, ActionType.ServeSuccess, match.GetCurrentScore(), TeamSide.Home, match.CurrentSetNumber);
+eventManager.AddEvent(gameEvent);
+scoringService.ProcessGameEvent(gameEvent);
+
+var report = statistics.GenerateStatisticsReport();
+```
+
+## 備註
+
+- 目前核心邏輯已完成，WinForms UI 仍屬後續整合目標。
+- 專案不依賴外部套件，主要依靠 .NET 標準庫。
 scoring.ProcessGameEvent(evt1);  // 比分: 1-0
 
 var evt2 = new GameEvent(2, ActionType.AttackSuccess, "1-0", TeamSide.Away, 1);

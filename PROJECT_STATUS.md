@@ -55,7 +55,7 @@
 - ✅ CSV 導出演示
 
 ### 7. **文檔** 
-- ℹ️ 架構設計文檔 - 待補齊（目前 repo 未包含 `ARCHITECTURE.md`）
+- ✅ `ARCHITECTURE.md` - 架構設計文檔
 - ✅ `API_REFERENCE.md` - API 快速參考指南
 - ✅ `PROJECT_STATUS.md` - 本文檔
 
@@ -77,8 +77,8 @@
 - ✅ `StatisticsEngine.cs` - 更新方法簽名和實現
 - ✅ `CsvExporter.cs` - 更新球員統計導出時的方法調用
 - ✅ `Program.cs` - 更新演示代碼
-- ✅ `ARCHITECTURE.md` - 更新文檔
-- ✅ `API_REFERENCE.md` - 更新 API 文檔
+- ✅ `ARCHITECTURE.md` - 新增並更新架構文檔
+- ✅ `API_REFERENCE.md` - 新增並更新 API 文檔
 
 ---
 
