@@ -143,7 +143,7 @@ namespace MyProject.Services
                 .Count(e => e.Team == team && scoringActions.Contains(e.Action));
         }
 
-        /// <summary>
+         
         /// 計算球員的失誤次數
         /// 同時指定隊伍，避免同背號球員混淆
         /// </summary>
@@ -220,7 +220,7 @@ namespace MyProject.Services
             return trendData;
         }
 
-        /// <summary>
+         
         /// 取得失誤密集點（連續失誤集群）
         /// 分析隊伍事件中是否存在集中的失誤時期
         /// </summary>

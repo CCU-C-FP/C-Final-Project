@@ -13,7 +13,7 @@ namespace MyProject.Services
         /// 當前比賽
         private Match _match;
 
-    /// <summary>
+     
         /// 事件管理器（可能為 null，用於舊系統相容性）
         /// </summary>
         private EventManager? _eventManager;

@@ -2,41 +2,41 @@ namespace MyProject.Services
 {
     using MyProject.Models;
 
-    /// <summary>
+     
     /// 事件管理器
     /// 負責維護比賽事件清單、事件新增、撤銷功能
     /// 支援事件通知機制（委派事件），與 UI 層解耦
     /// </summary>
     public class EventManager
     {
-        /// <summary>
+         
         /// 事件清單
         /// </summary>
         private List<GameEvent> _events;
 
-        /// <summary>
+         
         /// 撤銷棧 - 保存已撤銷的事件供重做使用
         /// </summary>
         private Stack<GameEvent> _undoStack;
 
-        /// <summary>
+         
         /// 重做棧
         /// </summary>
         private Stack<GameEvent> _redoStack;
 
-        /// <summary>
+         
         /// 事件發生時的委派通知
         /// 供 UI 層訂閱，實現解耦通知
         /// </summary>
         public event EventHandler<GameEvent>? EventAdded;
         public event EventHandler<GameEvent>? EventUndone;
         public event EventHandler<GameEvent>? EventRedone;
-        /// <summary>
+         
         /// 當所有事件被清除時通知訂閱者（例如讓 ScoringService 重置分數）
         /// </summary>
         public event EventHandler? EventsCleared;
 
-        /// <summary>
+         
         /// 建立新的事件管理器
         /// </summary>
         public EventManager()
@@ -46,7 +46,7 @@ namespace MyProject.Services
             _redoStack = new Stack<GameEvent>();
         }
 
-        /// <summary>
+         
         /// 新增事件
         /// </summary>
         public void AddEvent(GameEvent gameEvent)
@@ -62,7 +62,7 @@ namespace MyProject.Services
             }
         }
 
-        /// <summary>
+         
         /// 撤銷上一個事件
         /// </summary>
         public bool Undo()
