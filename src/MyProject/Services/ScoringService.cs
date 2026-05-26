@@ -232,10 +232,10 @@ namespace MyProject.Services
             return $"主隊: {homeSetScores} | 客隊: {awaySetScores}";
         }
 
-        /// <summary>
+        
         /// 根據 EventManager 中的所有事件重新計算比分
         /// 用於 Undo/Redo 操作後同步比分狀態
-        /// </summary>
+        
         private void RecalculateScores()
         {
             // 1. 重置比分和狀態
@@ -245,6 +245,10 @@ namespace MyProject.Services
             if (_eventManager != null)
             {
                 var allEvents = _eventManager.GetAllEvents();
+                if (allEvents.Count > 0)
+                {
+                    _match.Status = MatchStatus.InProgress;
+                }
                 foreach (var evt in allEvents)
                 {
                     ProcessGameEvent(evt, suppressNotifications: true);
@@ -255,9 +259,9 @@ namespace MyProject.Services
             ScoreUpdated?.Invoke(this, _match.GetCurrentScore());
         }
 
-        /// <summary>
+        
         /// 重置所有比分和局數信息
-        /// </summary>
+        
         private void ResetScores()
         {
             // 重置隊伍比分和局數
@@ -266,6 +270,7 @@ namespace MyProject.Services
             _match.HomeTeam.SetsWon = 0;
             _match.AwayTeam.SetsWon = 0;
             _match.CurrentSetNumber = 1;
+            _match.Status = MatchStatus.NotStarted;
 
             // 初始化第一局的比分
             _match.HomeTeam.StartNewSet(1);

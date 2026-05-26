@@ -91,7 +91,7 @@ namespace MyProject.Models
 
         public override string ToString()
         {
-            string scoreStr = string.Join("-", SetScores.Values);
+           string scoreStr = string.Join("-", SetScores.OrderBy(score => score.Key).Select(score => score.Value));
             return $"{TeamName} ({Side}) - 局數: {scoreStr} - 贏得: {SetsWon}";
         }
     }
