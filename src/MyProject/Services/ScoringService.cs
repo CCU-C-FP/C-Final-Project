@@ -1,6 +1,7 @@
 namespace MyProject.Services
 {
     using MyProject.Models;
+    using System.Linq;
 
     
     /// 評分服務
@@ -227,8 +228,12 @@ namespace MyProject.Services
         /// 取得詳細的局數比分
         public string GetDetailedScore()
         {
-            string homeSetScores = string.Join("-", _match.HomeTeam.SetScores.Values);
-            string awaySetScores = string.Join("-", _match.AwayTeam.SetScores.Values);
+            string homeSetScores = string.Join("-", _match.HomeTeam.SetScores
+                .OrderBy(kvp => kvp.Key)
+                .Select(kvp => kvp.Value));
+            string awaySetScores = string.Join("-", _match.AwayTeam.SetScores
+                .OrderBy(kvp => kvp.Key)
+                .Select(kvp => kvp.Value));
             return $"主隊: {homeSetScores} | 客隊: {awaySetScores}";
         }
 
