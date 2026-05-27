@@ -315,7 +315,7 @@ string GetCurrentScore()
 - `GetCurrentScore()` / `GetDetailedScore()`
     - 參數: 無。
     - 回傳: `string` — 簡易或詳細比分字串。
-    - 事件通知: `ScoreUpdated` (`EventHandler<string>`)、`SetFinished` (`EventHandler<int>`)、`MatchFinished` (`EventHandler<TeamSide>`)。
+    - 事件通知: `ScoreUpdated` (`EventHandler<string>?`)、`SetFinished` (`EventHandler<int>?`)、`MatchFinished` (`EventHandler<TeamSide>?`)。
 
 **StatisticsEngine**
 - `GetPlayerAttackSuccessRate(int playerId, TeamSide team)` / `GetPlayerServeSuccessRate(int playerId, TeamSide team)`
