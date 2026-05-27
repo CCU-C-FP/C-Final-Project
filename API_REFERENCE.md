@@ -1,6 +1,6 @@
 # API 參考
 
-本文檔對應目前 `src/MyProject` 的實作，重點整理事件管理、計分、統計與導出工具的公開 API。
+本文檔對應目前 `src/MyProject` 的實作（來源碼位於 `src/MyProject`），重點整理事件管理、計分、統計與導出工具的公開 API 與使用範例。
 
 ## 命名空間
 
@@ -34,6 +34,10 @@ var eventManager = new EventManager();
 - `EventUndone`
 - `EventRedone`
 - `EventsCleared`
+- `EventAdded` : `EventHandler<GameEvent>?` — 新增事件時通知，傳遞該 `GameEvent`。
+- `EventUndone` : `EventHandler<GameEvent>?` — 撤銷事件時通知，傳遞被撤銷的 `GameEvent`。
+- `EventRedone` : `EventHandler<GameEvent>?` — 重做事件時通知，傳遞被重做的 `GameEvent`。
+- `EventsCleared` : `EventHandler?` — 所有事件被清空時通知（例如讓 `ScoringService` 重置比分）。
 
 ### 方法
 
@@ -69,9 +73,9 @@ var scoringService = new ScoringService(match, eventManager);
 
 ### 事件
 
-- `ScoreUpdated`：比分更新時觸發，回傳新的比分字串。
-- `SetFinished`：單局結束時觸發，回傳獲勝方編號，`0` 代表主隊，`1` 代表客隊。
-- `MatchFinished`：比賽結束時觸發，回傳獲勝隊伍 `TeamSide`。
+ - `ScoreUpdated` : `EventHandler<string>?` — 比分更新時觸發，參數為新的比分字串（透過 `GetCurrentScore()` 取得）。
+ - `SetFinished` : `EventHandler<int>?` — 單局結束時觸發，參數為獲勝方識別（`0` 表示主隊，`1` 表示客隊）。
+ - `MatchFinished` : `EventHandler<TeamSide>?` — 比賽結束時觸發，參數為獲勝隊伍的 `TeamSide`。
 
 ### 方法
 
@@ -276,6 +280,75 @@ void ResumeMatch()
 void FinishMatch()
 string GetCurrentScore()
 ```
+
+## 參數與回傳值範本
+
+以下為每個主要類別常用方法的參數與回傳值說明範本，可作為文件擴充或自動產生說明的模板。
+
+**EventManager**
+- `AddEvent(GameEvent gameEvent)`
+    - 參數: `gameEvent` — 要新增的事件物件。
+    - 回傳: `void`。
+- `Undo()`
+    - 參數: 無。
+    - 回傳: `bool` — 成功撤銷返回 `true`，否則 `false`。
+- `Redo()`
+    - 參數: 無。
+    - 回傳: `bool` — 成功重做返回 `true`，否則 `false`。
+- `GetAllEvents()`
+    - 參數: 無。
+    - 回傳: `List<GameEvent>` — 事件副本清單。
+- `GetEventsByPlayer(int playerId)`
+    - 參數: `playerId` — 球員背號。
+    - 回傳: `List<GameEvent>` — 該球員相關事件。
+
+**ScoringService**
+- `ScoringService(Match match, EventManager eventManager)`
+    - 參數: `match` — 目標比賽；`eventManager` — 事件來源（供重算用）。
+    - 回傳: 建構子。
+- `ProcessGameEvent(GameEvent gameEvent)`
+    - 參數: `gameEvent` — 要處理的事件。
+    - 回傳: `void`。
+- `SetTeamScore(TeamSide team, int score)`
+    - 參數: `team` — 要設定的隊伍；`score` — 目標分數。
+    - 回傳: `void`。
+- `GetCurrentScore()` / `GetDetailedScore()`
+    - 參數: 無。
+    - 回傳: `string` — 簡易或詳細比分字串。
+    - 事件通知: `ScoreUpdated` (`EventHandler<string>?`)、`SetFinished` (`EventHandler<int>?`)、`MatchFinished` (`EventHandler<TeamSide>?`)。
+
+**StatisticsEngine**
+- `GetPlayerAttackSuccessRate(int playerId, TeamSide team)` / `GetPlayerServeSuccessRate(int playerId, TeamSide team)`
+    - 參數: `playerId` — 球員背號；`team` — 所屬隊伍。
+    - 回傳: `double` — 百分比（0-100）。
+- `GetTeamAttackSuccessRate(TeamSide team)` / `GetTeamServeSuccessRate(TeamSide team)`
+    - 參數: `team` — 隊伍。
+    - 回傳: `double` — 百分比（0-100）。
+- `GetTeamScoringBreakdown(TeamSide team)` / `GetTeamErrorBreakdown(TeamSide team)`
+    - 參數: `team` — 隊伍。
+    - 回傳: `Dictionary<ActionType,int>` — 各動作的計數。
+- `GetScoreTrendData()`
+    - 參數: 無。
+    - 回傳: `List<(int Time,int HomeScore,int AwayScore)>` — 得分時間序列。
+- `GetErrorClusterPoints(TeamSide team, int windowSize = 5)`
+    - 參數: `team` — 隊伍；`windowSize` — 滑動視窗大小 (>0)。
+    - 回傳: `List<ErrorClusterInfo>` — 失誤集群清單。
+
+**CsvExporter**
+- `ExportEventsToCSV(EventManager eventManager, Match match, string filePath)`
+    - 參數: `eventManager`、`match`、`filePath`（輸出路徑）。
+    - 回傳: `bool` — 匯出成功為 `true`，失敗為 `false`（並印出錯誤資訊）。
+- `ExportStatisticsToCSV(StatisticsEngine statistics, Match match, EventManager eventManager, string filePath)`
+    - 參數: 同上。
+    - 回傳: `bool`。
+
+**Models（快速說明）**
+- `GameEvent` 屬性: `Timestamp`、`PlayerId`、`Action`、`Score`、`Team`、`SetNumber`、`Notes`。
+    - 建構子: `GameEvent()` / `GameEvent(int playerId, ActionType action, string score, TeamSide team, int setNumber = 1)`。
+- `Player` 建構子與屬性: `JerseyNumber`、`Name`、`Position`、`Height`、`IsActive`、`Team`。
+- `Team` 方法: `AddPlayer(Player)`、`GetPlayerByNumber(int)`、`GetCurrentSetScore(int)`、`UpdateCurrentSetScore(int,int)`、`StartNewSet(int)`、`GetActivePlayers()`。
+- `Match` 方法: `StartMatch()`、`PauseMatch()`、`ResumeMatch()`、`FinishMatch()`、`GetCurrentScore()`。
+- `ErrorClusterInfo` 屬性: `StartTimestamp`、`EndTimestamp`、`GlobalEventStartIndex`、`ErrorCount`、`WindowSize`、`Duration`。
 
 ## 建議使用流程
 
