@@ -373,8 +373,6 @@ var report = statistics.GenerateStatisticsReport();
 
 - 目前核心邏輯已完成，WinForms UI 仍屬後續整合目標。
 - 專案不依賴外部套件，主要依靠 .NET 標準庫。
- - 目前核心邏輯已完成，UI 層（例如 WinForms）為後續整合項目。
- - 專案不依賴外部第三方套件，主要使用 .NET 標準函式庫。
 scoring.ProcessGameEvent(evt1);  // 比分: 1-0
 
 var evt2 = new GameEvent(2, ActionType.AttackSuccess, "1-0", TeamSide.Away, 1);
